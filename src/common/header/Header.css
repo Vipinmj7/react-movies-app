@@ -16,3 +16,7 @@
  @keyframes app-logo-spin {
     from { transform: scaleX(-1); }
  }
+ .ReactModal_Content {
+    height: 100%;
+    width: 100%;
+  }
