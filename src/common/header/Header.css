@@ -16,7 +16,17 @@
  @keyframes app-logo-spin {
     from { transform: scaleX(-1); }
  }
- .ReactModal_Content {
-    height: 100%;
-    width: 100%;
-  }
+ .tabs {
+    margin-bottom: 20px;
+}
+.dispNone {
+    display: none;
+}
+
+.dispBlock {
+    display: block;
+}
+
+.red {
+    color: red;
+}
