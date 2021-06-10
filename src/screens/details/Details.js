@@ -1,23 +1,24 @@
+
 import React, { Component } from 'react';
 import Header from '../../common/header/Header';
 import moviesData from '../../common/movieData';
 import Typography from '@material-ui/core/Typography';
 import './Details.css';
 import YouTube from 'react-youtube';
-
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
-
 import StarBorderIcon from '@material-ui/icons/StarBorder';
-
 import { Link } from 'react-router-dom';
-
 class Details extends Component {
     constructor() {
         super();
         this.state = {
-            movie: {},
+            movie: {
+                genres: [],
+                trailer_url: "",
+                artists: []
+            },
             starIcons: [{
                 id: 1,
                 stateId: "star1",
@@ -45,14 +46,24 @@ class Details extends Component {
             }]
         }
     }
-    
+
     componentWillMount() {
-        let currentState = this.state;
-        currentState.movie = moviesData.filter((mov) => {
-            return mov.id === this.props.match.params.id
-        })[0];
-        this.setState({ currentState });
+        
+        let that = this;
+        let dataMovie = null;
+        let xhrMovie = new XMLHttpRequest();
+        xhrMovie.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                that.setState({
+                    movie: JSON.parse(this.responseText)
+                });
+            }
+        });
+        xhrMovie.open("GET", this.props.baseUrl + "movies/" + this.props.match.params.id);
+        //xhrMovie.setRequestHeader("Cache-Control", "no-cache");
+        xhrMovie.send(dataMovie);
     }
+
     artistClickHandler = (url) => {
         window.location = url;
     }
@@ -65,7 +76,6 @@ class Details extends Component {
             }
             else {
                 starNode.color = "black";
-
             }
             starIconList.push(starNode);
         }
@@ -82,7 +92,7 @@ class Details extends Component {
         }
         return (
             <div className="details">
-               <Header id={this.props.match.params.id} baseUrl={this.props.baseUrl} showBookShowButton="true" />
+                <Header id={this.props.match.params.id} baseUrl={this.props.baseUrl} showBookShowButton="true" />
                 <div className="back">
                     <Typography>
                         <Link to="/">  &#60; Back to Home</Link>
@@ -90,12 +100,13 @@ class Details extends Component {
                 </div>
                 <div className="flex-containerDetails">
                     <div className="leftDetails">
-                        <img src={movie.poster_url} alt={movie.title} />    
+                        <img src={movie.poster_url} alt={movie.title} />
                     </div>
                     <div className="middleDetails">
-                    <div>
+                        <div>
                             <Typography variant="headline" component="h2">{movie.title} </Typography>
                         </div>
+                        <br />
                         <div>
                             <Typography>
                                 <span className="bold">Genres: </span> {movie.genres.join(', ')}
@@ -125,7 +136,7 @@ class Details extends Component {
                         </div>
                     </div>
                     <div className="rightDetails">
-                    <Typography>
+                        <Typography>
                             <span className="bold">Rate this movie: </span>
                         </Typography>
                         {this.state.starIcons.map(star => (
@@ -135,7 +146,7 @@ class Details extends Component {
                                 onClick={() => this.starClickHandler(star.id)}
                             />
                         ))}
-                    <div className="bold marginBottom16 marginTop16">
+                        <div className="bold marginBottom16 marginTop16">
                             <Typography>
                                 <span className="bold">Artists:</span>
                             </Typography>
@@ -161,5 +172,4 @@ class Details extends Component {
         )
     }
 }
-
 export default Details;
