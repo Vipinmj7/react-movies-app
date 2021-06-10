@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
+
+import { Link } from 'react-router-dom';
+
 import './Header.css';
+
 import Button from '@material-ui/core/Button';
 import logo from '../../assets/logo.svg';
 import Modal from 'react-modal';
@@ -62,7 +66,9 @@ class Header extends Component {
             emailRequired: "dispNone",
             email: "",
             contactnoRequired: "dispNone",
-            contactno: ""
+            contactno: "",
+            registrationSuccess: false,
+            loggedIn: sessionStorage.getItem("access-token") == null ? false : true
         });
     }
 
@@ -75,6 +81,27 @@ class Header extends Component {
     loginClickHandler = () => {
         this.state.username === "" ? this.setState({ usernameRequired: "dispBlock" }) : this.setState({ usernameRequired: "dispNone" });
         this.state.password === "" ? this.setState({ passwordRequired: "dispBlock" }) : this.setState({ passwordRequired: "dispNone" });
+        let dataLogin = null;
+        let xhrLogin = new XMLHttpRequest();
+        let that = this;
+        xhrLogin.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                sessionStorage.setItem("uuid", JSON.parse(this.responseText).id);
+                sessionStorage.setItem("access-token", xhrLogin.getResponseHeader("access-token"));
+
+                that.setState({
+                    loggedIn: true
+                });
+
+                that.closeModalHandler();
+            }
+        });
+
+        xhrLogin.open("POST", this.props.baseUrl + "auth/login");
+        xhrLogin.setRequestHeader("Authorization", "Basic " + window.btoa(this.state.username + ":" + this.state.loginPassword));
+        xhrLogin.setRequestHeader("Content-Type", "application/json");
+     //   xhrLogin.setRequestHeader("Cache-Control", "no-cache");
+        xhrLogin.send(dataLogin);
     }
     registerClickHandler = () => {
         this.state.username === "" ? this.setState({ usernameRequired: "dispBlock" }) : this.setState({ usernameRequired: "dispNone" });
@@ -83,6 +110,28 @@ class Header extends Component {
         this.state.lastname === "" ? this.setState({ lastNameRequired: "dispBlock" }) : this.setState({ lastNameRequired: "dispNone" });
         this.state.email === "" ? this.setState({ emailRequired: "dispBlock" }) : this.setState({ emailRequired: "dispNone" });
         this.state.contactno === "" ? this.setState({ contactnoRequired: "dispBlock" }) : this.setState({ contactnoRequired: "dispNone" });
+        let dataSignup = JSON.stringify({
+            "email_address": this.state.email,
+            "first_name": this.state.firstname,
+            "last_name": this.state.lastname,
+            "mobile_number": this.state.contact,
+            "password": this.state.registerPassword
+        });
+
+        let xhrSignup = new XMLHttpRequest();
+        let that = this;
+        xhrSignup.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                that.setState({
+                    registrationSuccess: true
+                });
+            }
+        });
+
+        xhrSignup.open("POST", this.props.baseUrl + "signup");
+        xhrSignup.setRequestHeader("Content-Type", "application/json");
+     //   xhrSignup.setRequestHeader("Cache-Control", "no-cache");
+        xhrSignup.send(dataSignup);
     }
 
     inputUsernameChangeHandler = (e) => {
@@ -103,16 +152,41 @@ class Header extends Component {
     inputPasswordChangeHandler = (e) => {
         this.setState({ password: e.target.value });
     }
+    logoutHandler = (e) => {
+        sessionStorage.removeItem("uuid");
+        sessionStorage.removeItem("access-token");
+
+        this.setState({
+            loggedIn: false
+        });
+    }
     render() {
         return (
             <div>
                 <header className="app-header">
                     <img src={logo} className="app-logo" alt="Movies App Logo" />
-                    <div className="login-button">
-                        <Button variant="contained" color="default" onClick={this.openModalHandler} >
-                            Login
-                        </Button>
-                    </div>
+                    {!this.state.loggedIn ?
+                        <div className="login-button">
+                            <Button variant="contained" color="default" onClick={this.openModalHandler}>
+                                Login
+                            </Button>
+                        </div>
+                        :
+                        <div className="login-button">
+                            <Button variant="contained" color="default" onClick={this.logoutHandler}>
+                                Logout
+                            </Button>
+                        </div>
+                    }
+                    {this.props.showBookShowButton === "true" ?
+                        <div className="bookshow-button">
+                            <Link to={"/bookshow/" + this.props.id}>
+                                <Button variant="contained" color="primary">
+                                    Book Show
+                                </Button>
+                            </Link>
+                        </div>
+                        : ""}
                 </header>
                 <Modal
                     ariaHideApp={false}
@@ -142,6 +216,22 @@ class Header extends Component {
                                     <span className="red">required</span>
                                 </FormHelperText>
                             </FormControl>
+                            <br /><br />
+                            {this.state.registrationSuccess === true &&
+                                <FormControl>
+                                    <span className="successText">
+                                        Registration Successful. Please Login!
+                                      </span>
+                                </FormControl>
+                            }
+                            <br /><br />
+                            {this.state.loggedIn === true &&
+                                <FormControl>
+                                    <span className="successText">
+                                        Login Successful!
+                                    </span>
+                                </FormControl>
+                            }
                             <br /><br />
                             <Button variant="contained" color="primary" onClick={this.loginClickHandler}>LOGIN</Button>
                         </TabContainer>
